@@ -32,7 +32,7 @@ def main():
     print("Initializing Langevin simulator...")
     simulator = LangevinSimulator(
         potential=potential,
-        temperature=49.0,  # Temperature for thermostat
+        temperature=9.0,  # Temperature for thermostat
         friction=0.5,      # Friction coefficient
         dt=0.01           # Time step
     )
@@ -45,8 +45,8 @@ def main():
     results = simulator.simulate(
         initial_positions=initial_positions,
         initial_velocities=initial_velocities,
-        n_steps=1000,
-        save_every=10
+        n_steps=1_000_000,
+        save_every=100
     )
     
     print(f"Simulation completed! Generated {len(results['positions'])} data points")
