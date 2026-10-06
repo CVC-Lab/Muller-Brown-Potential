@@ -9,6 +9,8 @@ and visualizes their trajectories and spatial distributions.
 import matplotlib.pyplot as plt
 import torch
 
+from extract_paths import extract_mb_paths
+
 from muller_brown import (
     MuellerBrownPotential,
     LangevinSimulator,
@@ -64,6 +66,11 @@ def main():
     print("Saving simulation data...")
     save_path = save_simulation_data(results, create_artifact_dir=True)
     print(f"Data saved to: {save_path}")
+
+    # Extract full paths whose final positions are much closer to MB than MA
+    extract_mb_paths(
+        results, save_path.parent / "mb_endpoint_selection", max_distance_ratio=0.5
+    )
     
     # 5. Create visualizations
     print("Creating visualizations...")

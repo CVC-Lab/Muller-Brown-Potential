@@ -101,6 +101,21 @@ Run the example with:
 uv run python example.py
 ```
 
+The example samples 100 paths and extracts full paths whose final saved
+positions satisfy `distance_to_MB <= 0.5 * distance_to_MA`, using Euclidean
+distance. Extracted observables, original path indices, an endpoint-distance
+CSV, and plots are saved in `mb_endpoint_selection` inside the artifact folder.
+
+To extract paths from an existing ensemble without rerunning the simulation:
+
+```bash
+uv run python extract_paths.py artifacts/<run>/trajectory_<timestamp>.h5
+```
+
+Use `--distance-ratio 0.25` for a stricter cutoff or `--output-dir <path>` to
+choose a separate output folder. Selection uses the final saved position;
+visiting MB earlier in a path does not qualify it.
+
 ### Managing Artifacts
 
 The repository includes a utility to manage simulation artifacts:
