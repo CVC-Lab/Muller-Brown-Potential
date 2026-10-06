@@ -32,17 +32,19 @@ def main():
     print("Initializing Langevin simulator...")
     simulator = LangevinSimulator(
         potential=potential,
-        temperature=15.0,  # Temperature for thermostat
-        friction=1.0,      # Friction coefficient
+        temperature=1.0,  # Temperature for thermostat
+        friction=0.5,      # Friction coefficient
         dt=0.01           # Time step
     )
     
     # 3. Run a simulation
     print("Running simulation...")
-    initial_positions = torch.tensor([[0.0, 0.0]], dtype=torch.float64)
+    initial_positions = torch.tensor([[-0.55822363,1.44172584]], dtype=torch.float64)
+    initial_velocities = torch.tensor([[0,0]], dtype=torch.float64)
     
     results = simulator.simulate(
         initial_positions=initial_positions,
+        initial_velocities=initial_velocities,
         n_steps=10000,
         save_every=10
     )
