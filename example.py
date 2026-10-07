@@ -6,6 +6,7 @@ This script samples 100 independent paths from a common initial state
 and visualizes their trajectories and spatial distributions.
 """
 
+import argparse
 import matplotlib.pyplot as plt
 import torch
 
@@ -19,8 +20,8 @@ from muller_brown import (
 )
 
 
-def main():
-    """Sample and visualize an ensemble of 100 Langevin paths."""
+def main(temperature: float, n_paths: int):
+    """Sample and visualize an ensemble of Langevin paths."""
     print("=== Müller-Brown Simulation Example ===")
     torch.manual_seed(42)
     
@@ -36,13 +37,12 @@ def main():
     print("Initializing Langevin simulator...")
     simulator = LangevinSimulator(
         potential=potential,
-        temperature=9.0,  # Temperature for thermostat
+        temperature=temperature,  # Temperature for thermostat
         friction=0.5,      # Friction coefficient
         dt=0.01           # Time step
     )
     
     # 3. Sample independent paths in one vectorized simulation
-    n_paths = 100
     print(f"Sampling {n_paths} paths...")
     initial_positions = torch.tensor(
         [[-0.55822363, 1.44172584]], dtype=torch.float64
@@ -116,4 +116,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser("Sample and visualize an ensemble of Langevin paths.")
+    parser.add_argument("-t","--temperature", type=float)
+    parser.add_argument("-n","--num_paths", type=int)
+    args = parser.parse_args()
+    main(args.temperature, args.num_paths)
