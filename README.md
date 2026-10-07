@@ -116,6 +116,71 @@ Use `--distance-ratio 0.25` for a stricter cutoff or `--output-dir <path>` to
 choose a separate output folder. Selection uses the final saved position;
 visiting MB earlier in a path does not qualify it.
 
+### Rare transitions at temperature 3
+
+The barrier out of MA is approximately 106 in this potential's energy units.
+With `kB=1` and `T=3`, this is about 35 thermal energy units, so ordinary
+MA-started rollouts are unlikely to yield transitions. The Boltzmann factor
+`exp(-106/3)` is an activation factor, not a crossing probability or rate.
+
+Use weighted-ensemble sampling to allocate more walkers along the transition
+region while retaining the original temperature-3 BAOAB dynamics:
+
+```bash
+uv run python sample_transition_paths.py --temperature 3 --seed 42 \
+    --output-dir artifacts/we_temp3_seed42
+```
+
+The sampler checks both basins at **every integration step** and saves each
+reactive segment from its last frame inside A to its first frame inside B.
+A and B are radius-0.15 disks around MA and MB; configure their radii with
+`--source-radius` and `--target-radius`. By default, resampling uses total-energy
+bins, separately within each nearest-minimum region. This protects the rare
+energetic walkers needed for low-friction escape and the walkers entering the
+intermediate well. Alternatively, `--binning arclength` uses bins along the
+minima/saddle polyline. Bins affect allocation, never the forces.
+Systematic resampling preserves balanced bins to reduce loss of diversity.
+Positions and velocities are copied together, then clones receive independent
+thermostat noise. B is absorbing, without recycling.
+
+The initial state is the rounded MA minimum with zero velocity, matching the
+example's initial-state convention. This samples **finite-horizon first
+passages from that initial state**, not automatically the stationary
+equilibrium transition-path ensemble. The default run uses 2,000 resampling
+iterations, 50 integration steps per iteration, `dt=0.002`,
+and 32 walkers per occupied bin (40 energy bins per nearest-minimum region).
+Its horizon is 200 simulation time units.
+By default, at most 10,000 paths are retained in a weighted reservoir. If more
+events occur, the output samples their weighted empirical distribution with
+replacement and redistributes the total event weight equally among retained
+records. This bounds storage and adds sampling variance. `--max-paths 0` keeps
+all original events and weights, with larger memory and storage requirements.
+
+Outputs include:
+
+- `transition_paths.h5`: variable-length position/velocity arrays under
+  `paths/<index>`, per-path timestep and start/end step, and absolute probability
+  contributions in `weights` (also attached to each path).
+- `sampling_history.csv`: active/absorbed probability mass and walker counts.
+- `summary.json`: dynamics, basin definitions, initial state, and sampling metadata.
+- `transition_paths.png`: a weighted sample of the recorded crossings.
+
+**Use the path weights.** For a path statistic `f`, estimate its conditional
+mean as `sum(w * f) / sum(w)`. Do not treat the raw path count as a transition
+probability or the cloned paths as independent samples. The absorbed weight
+estimates first-passage probability within the specified horizon, not a
+stationary transition rate. Establish convergence across independent seeds,
+bin/iteration settings, basin definitions, and smaller timesteps before using
+the output as a ground-truth reference. The saved weight-concentration count
+ignores genealogical correlations and is not an independent-sample count.
+After output resampling, use `weights`/the per-path `weight`, rather than
+`original_event_weight`. Repeated `event_id` values identify repeated selections
+of one event; different event IDs can still share ancestral trajectory segments.
+For memory-bounded analysis, the library sampler also accepts an `on_transition`
+callback, which consumes paths as they arrive instead of keeping them all in RAM.
+
+Method reference: [Zhang, Jasnow, and Zuckerman, weighted-ensemble path sampling](https://arxiv.org/abs/0810.1963).
+
 ### Managing Artifacts
 
 The repository includes a utility to manage simulation artifacts:
